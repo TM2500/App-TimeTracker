@@ -91,9 +91,25 @@ my %BASE = ( home=>$tmp, config=>{} );
             %BASE,
             last    => 'day',
         });
-        
+
         is($t4->from->iso8601,'2011-09-06T00:00:00','From 4 ok');
         is($t4->to->iso8601,'2011-09-06T23:59:59','To 4 ok');
+    }
+
+    {
+        my $t5 = $class_name->new({
+            home=>$tmp,
+            config=>{ day_boundary=>'03:00' },
+            last    => 'day',
+        });
+        is($t5->from->iso8601,'2011-09-06T03:00:00','From 5 ok (day_boundary)');
+        is($t5->to->iso8601,'2011-09-07T02:59:59','To 5 ok (day_boundary)');
+        my ($f,$t) = $t5->_get_cmp_from_to({
+            from=> $t5->from,
+            to => $t5->to,
+        });
+        is($f,'20110906030000','day boundary From ok');
+        is($t,'20110907025959','day boundary To ok');
     }
 }
 
