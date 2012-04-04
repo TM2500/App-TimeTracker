@@ -471,20 +471,26 @@ sub _load_attribs_recalc_trackfile {
 
 sub _build_from {
     my $self = shift;
+    my $from;
     if (my $last = $self->last) {
-        return now()->truncate( to => $last)->subtract( $last.'s' => 1 );
+        $from = now()->truncate( to => $last)->subtract( $last.'s' => 1 );
     }
     elsif (my $this = $self->this) {
-        return now()->truncate( to => $this);
+        $from = now()->truncate( to => $this);
     }
     else {
-        return now()->truncate( to => 'month');
+        $from = now()->truncate( to => 'month');
     }
+    if ($self->config->{day_boundary} && $from->hms eq '00:00:00') {
+        my ($h,$m,$s) = split(/:/,$self->config->{day_boundary});
+        $from->add(hours=>$h || 0 ,minutes=>$m ||0 ,seconds=>$s ||0);
+    }
+    return $from;
 }
 
 sub _build_to {
     my $self = shift;
-    
+
     if (my $date = $self->this || $self->last) {
         return $self->from->clone
         ->add( $date.'s' => 1 )
@@ -639,12 +645,21 @@ Automatically set C<--from> and C<--to> to the calculated values
     ~/perl/Your-Project$ tracker worked --this week
     17:01:50
 
+You can set a config value C<day_boundary> to set a different day boundary than 00:00:00 (e.g. if you like to work late and your day usually ends at 2:00)
+
+    # add to config: "day_boundary":"07:00"
+    ~/perl/Your-Project$ tracker worked --this day
+    From 2012-03-05T07:00:00 to 2012-03-06T06:59:59 you worked on:
+    ...
+
 =head4 --last [day, week, month, year]
 
 Automatically set C<--from> and C<--to> to the calculated values
 
     ~/perl/Your-Project$ tracker worked --last day (=yesterday)
     06:39:12
+
+C<day_boundary> also applies here.
 
 =head4 --project SomeProject [Multiple]
 
