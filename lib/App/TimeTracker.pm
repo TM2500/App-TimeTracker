@@ -162,14 +162,8 @@ sub beautify_seconds {
 sub find_task_files {
     my ($self, $args) = @_;
 
-    my ($cmp_from, $cmp_to);
+    my ($cmp_from, $cmp_to) = $self->_get_cmp_from_to($args);
 
-    if (my $from = $args->{from}) {
-        my $to = $args->{to} || $self->now;
-        $to->set(hour=>23,minute=>59,second=>59) unless $to->hour;
-        $cmp_from = $from->strftime("%Y%m%d%H%M%S");
-        $cmp_to = $to->strftime("%Y%m%d%H%M%S");
-    }
     my $projects;
     if ($args->{projects}) {
         $projects = join('|',map {s/-/./g; $_} @{$args->{projects}});
@@ -206,6 +200,19 @@ sub find_task_files {
         push(@found,$file);
     }
     return sort @found;
+}
+
+sub _get_cmp_from_to {
+    my ($self, $args) = @_;
+    my ($cmp_from, $cmp_to);
+
+    if (my $from = $args->{from}) {
+        my $to = $args->{to} || $self->now;
+        $to->set(hour=>23,minute=>59,second=>59) unless $to->hour;
+        $cmp_from = $from->strftime("%Y%m%d%H%M%S");
+        $cmp_to = $to->strftime("%Y%m%d%H%M%S");
+    }
+    return ($cmp_from,$cmp_to);
 }
 
 sub project_tree {
